@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELUVAR - Frecuencia Diamante</title>
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --deep-blue: #0a192f;
+            --champagne-gold: #f7e7ce;
+            --old-gold: #cfb53b;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: 'Segoe UI', sans-serif;
+            background: radial-gradient(circle at center, #112240 0%, var(--deep-blue) 100%);
+            color: white; display: flex; align-items: center; justify-content: center;
+            overflow: hidden; text-align: center;
+        }
+        @keyframes levitate {
+            0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 10px var(--old-gold)); }
+            50% { transform: translateY(-15px) scale(1.05); filter: drop-shadow(0 0 20px var(--champagne-gold)); }
+        }
+        .glass-container {
+            background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border); border-radius: 40px;
+            padding: 30px; width: 85%; max-width: 360px;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.6);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .spirit-logo { width: 140px; height: auto; animation: levitate 6s ease-in-out infinite; margin-bottom: 5px; }
+        h1 { color: var(--champagne-gold); font-weight: 300; letter-spacing: 8px; margin: 0; font-size: 1.8rem; text-transform: uppercase; }
+        .slogan { color: var(--old-gold); font-size: 0.6rem; letter-spacing: 2px; margin-bottom: 20px; opacity: 0.8; }
+        .visualizer-wrapper {
+            position: relative; width: 220px; height: 220px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+        }
+        .om-watermark { position: absolute; font-size: 140px; color: var(--champagne-gold); opacity: 0.1; pointer-events: none; }
+        .energy-circle { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--old-gold); opacity: 0.5; }
+        #hz-display { font-size: 2.5rem; font-weight: bold; z-index: 5; }
+        .btn-aura {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid var(--old-gold);
+            padding: 15px; border-radius: 50px; color: white; cursor: pointer;
+            width: 100%; font-size: 0.9rem; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;
+        }
+        #message { margin-top: 20px; min-height: 45px; color: var(--champagne-gold); font-style: italic; font-size: 0.85rem; }
+        .extra-nav { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+        .nav-item { font-size: 0.65rem; color: var(--champagne-gold); opacity: 0.7; cursor: pointer; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="glass-container">
+        <img src="logo.png" alt="Persona Luminosa" class="spirit-logo">
+        <h1>ELUVAR</h1>
+        <div class="slogan">Tu frecuencia, tu esencia</div>
+        <div class="visualizer-wrapper">
+            <div class="om-watermark">ॐ</div>
+            <div class="energy-circle"></div>
+            <div id="hz-display">0000 Hz</div>
+        </div>
+        <button class="btn-aura" id="btn-main" onclick="startAnalysis()">MEDIR FRECUENCIA</button>
+        <div id="message"></div>
+        <div style="font-size: 0.55rem; color: var(--old-gold); margin-top: 15px;">
+            <p>TU VOZ ES LA LLAVE; TU FRECUENCIA, EL DESTINO</p>
+            <p>ENRAIZADA EN LA TIERRA, VIBRANDO EN EL DIAMANTE</p>
+        </div>
+        <div class="extra-nav">
+            <span class="nav-item">FAQ</span>
+            <span class="nav-item">PRIVACIDAD</span>
+            <span class="nav-item">AFIRMACIONES</span>
+        </div>
+        <div style="font-size: 0.6rem; margin-top: 20px; opacity: 0.4;">ELUVAR ©️ 2026</div>
+    </div>
+    <script>
+        async function startAnalysis() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const audioContext = new AudioContext();
+                const analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaStreamSource(stream);
+                analyser.fftSize = 2048;
+                source.connect(analyser);
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                document.getElementById('btn-main').innerText = "SINTONIZANDO...";
+                const draw = () => {
+                    if (audioContext.state === 'closed') return;
+                    requestAnimationFrame(draw);
+                    analyser.getByteFrequencyData(dataArray);
+                    let maxVal = 0, maxIndex = -1;
+                    for(let i=0; i < dataArray.length; i++) {
+                        if(dataArray[i] > maxVal) { maxVal = dataArray[i]; maxIndex = i; }
+                    }
+                    let freq = maxIndex * audioContext.sampleRate / analyser.fftSize;
+                    if (maxVal > 30) document.getElementById('hz-display').innerText = Math.round(freq) + " Hz";
+                };
+                draw();
+                setTimeout(() => {
+                    const frases = [
+                        "Armonía detectada: Tu energía fluye en equilibrio",
+                        "Estás vibrando en la frecuencia del Diamante",
+                        "Se detectó conexión con energía terrestre",
+                        "Frecuencia de sanación detectada en tu voz"
+                    ];
+                    document.getElementById('message').innerText = frases[Math.floor(Math.random()*4)];
+                    document.getElementById('btn-main').innerText = "CONEXIÓN ESTABLECIDA";
+                    audioContext.close();
+                    stream.getTracks().forEach(t => t.stop());
+                }, 4000);
+            } catch (err) { alert("Micrófono requerido."); }
+        }
+    </script>
+</body>
+</html>

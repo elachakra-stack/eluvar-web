@@ -1,0 +1,19 @@
+{
+  "short_name": "ELUVAR",
+  "name": "ELUVAR - Frecuencia Diamante",
+  "description": "Mide tu vibración energética y conecta con la frecuencia del diamante.",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "display": "standalone",
+  "theme_color": "#0a192f",
+  "background_color": "#0a192f",
+  "orientation": "portrait",
+  "lang": "es"
+}
