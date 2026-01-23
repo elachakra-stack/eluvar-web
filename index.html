@@ -31,11 +31,18 @@
             max-width: 400px;
         }
 
-        .logo-container img {
-            width: 120px;
-            margin-top: 20px;
-            filter: drop-shadow(0 0 10px var(--old-gold));
-        }
+       .logo-container img {
+    width: 120px;
+    margin-top: 20px;
+    filter: drop-shadow(0 0 10px var(--old-gold));
+    animation: float 3s ease-in-out infinite; /* Esto le da la levitación */
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
+}
 
         h1 { font-weight: 300; letter-spacing: 5px; color: var(--champagne-gold); margin: 10px 0; }
         p.slogan { font-size: 0.8rem; color: var(--old-gold); margin-bottom: 30px; }
@@ -195,3 +202,4 @@
     </script>
 </body>
 </html>
+
