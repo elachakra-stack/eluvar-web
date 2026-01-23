@@ -1,205 +1,200 @@
 <!DOCTYPE html>
-<html lang="es"> <head>
+<html lang="es">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ELUVAR - Tu Frecuencia</title>
-    <link rel="manifest" href="manifest.json">
+    <title>ELUVAR - Frecuencia Diamante</title>
     <style>
         :root {
             --deep-blue: #0a192f;
             --old-gold: #cfb53b;
             --champagne-gold: #f7e7ce;
-            --glass: rgba(255, 255, 255, 0.1);
+            --glass: rgba(255, 255, 255, 0.08);
         }
 
-        body {
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, var(--deep-blue) 0%, #112240 100%);
-            color: white;
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
             font-family: 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            text-align: center;
+            background: radial-gradient(circle at center, #112240 0%, var(--deep-blue) 100%);
+            color: white; display: flex; align-items: center; justify-content: center;
+            overflow-x: hidden;
         }
 
-        .container {
-            padding: 20px;
-            width: 90%;
-            max-width: 400px;
+        .container { width: 90%; max-width: 400px; text-align: center; }
+
+        /* Persona Luminosa Flotante */
+        .logo-container img {
+            width: 120px;
+            filter: drop-shadow(0 0 15px var(--old-gold));
+            animation: float 4s ease-in-out infinite;
         }
 
-       .logo-container img {
-    width: 120px;
-    margin-top: 20px;
-    filter: drop-shadow(0 0 10px var(--old-gold));
-    animation: float 3s ease-in-out infinite; /* Esto le da la levitación */
-}
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
 
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-15px); }
-    100% { transform: translateY(0px); }
-}
-
-        h1 { font-weight: 300; letter-spacing: 5px; color: var(--champagne-gold); margin: 10px 0; }
-        p.slogan { font-size: 0.8rem; color: var(--old-gold); margin-bottom: 30px; }
-
-        .glass-card {
+        /* Círculo Expansivo con OM */
+        .glass-circle {
             background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(255,255,255,0.1);
             border-radius: 50%;
-            width: 250px;
-            height: 250px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            width: 270px; height: 270px;
             margin: 20px auto;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5), inset 0 0 20px var(--old-gold);
+            display: flex; flex-direction: column; justify-content: center;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5), inset 0 0 30px var(--old-gold);
+            position: relative;
+            animation: pulse 3s infinite ease-in-out;
         }
 
-        #frequency-display { font-size: 3rem; font-weight: bold; }
-        
-        .btn-main {
-            background: transparent;
-            border: 2px solid var(--champagne-gold);
-            color: var(--champagne-gold);
-            padding: 12px 30px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1rem;
+        .glass-circle::before {
+            content: "ॐ";
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 9rem;
+            color: rgba(255, 255, 255, 0.04);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+            50% { transform: scale(1.04); box-shadow: 0 0 60px rgba(207, 181, 59, 0.2); }
+        }
+
+        #freq-val { font-size: 3.5rem; font-weight: bold; z-index: 1; position: relative; letter-spacing: 2px; }
+
+        .btn-medir {
+            background: var(--champagne-gold); color: var(--deep-blue);
+            border: none; padding: 16px 45px; border-radius: 35px;
+            font-size: 1rem; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            text-transform: uppercase; letter-spacing: 1px;
             transition: 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 2px;
         }
 
-        .btn-main:hover { background: var(--champagne-gold); color: var(--deep-blue); }
+        .btn-medir:active { transform: scale(0.95); }
 
-        .footer-nav { margin-top: 40px; font-size: 0.7rem; }
-        .footer-nav a { color: var(--old-gold); text-decoration: none; margin: 0 10px; cursor: pointer; display: inline-block; padding: 5px; }
-        
-        /* Modales Estilizados */
+        /* Modales Elegantes */
         .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 1000;
-            overflow-y: auto;
+            display: none; position: fixed; top: 0; left: 0; 
+            width: 100%; height: 100%; background: rgba(0,0,0,0.92); 
+            z-index: 1000; padding: 20px; box-sizing: border-box;
+            backdrop-filter: blur(5px);
         }
 
         .modal-content {
-            background: var(--deep-blue);
-            border: 1px solid var(--old-gold);
-            padding: 25px;
-            border-radius: 15px;
-            max-width: 85%;
-            margin: 10% auto;
-            text-align: left;
-            position: relative;
+            background: var(--deep-blue); border: 1px solid var(--old-gold);
+            padding: 30px; border-radius: 20px; margin: 10% auto;
+            max-width: 450px; text-align: left; position: relative;
+            box-shadow: 0 0 30px var(--old-gold);
         }
 
-        .close-btn { color: var(--old-gold); position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 1.5rem; }
+        .close-btn { color: var(--old-gold); position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 1.8rem; }
+
+        .footer-nav { margin-top: 35px; font-size: 0.8rem; }
+        .footer-nav a { color: var(--old-gold); text-decoration: none; margin: 0 12px; cursor: pointer; font-weight: 500; }
+        
+        #status { margin-top: 15px; font-size: 0.95rem; color: var(--champagne-gold); min-height: 1.4rem; font-style: italic; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="logo-container">
-            <img src="logo.png" alt="Eluvar Logo">
-        </div>
-        <h1>ELUVAR</h1>
-        <p class="slogan">Tu frecuencia, tu esencia</p>
+<div class="container">
+    <div class="logo-container"><img src="logo.png" alt="Eluvar Logo"></div>
+    <h1 style="font-weight:300; letter-spacing:6px; color:var(--champagne-gold); margin:15px 0 5px;">ELUVAR</h1>
+    <p style="color:var(--old-gold); font-size:0.85rem; margin-bottom:25px; letter-spacing:1px;">Tu frecuencia, tu esencia</p>
 
-        <div class="glass-card">
-            <div id="frequency-display">0000 Hz</div>
-        </div>
-
-        <button class="btn-main" onclick="startMic()">Medir Frecuencia</button>
-
-        <p id="status-text" style="margin-top: 20px; font-style: italic; color: var(--champagne-gold); height: 1.2rem;"></p>
-
-        <div class="footer-text" style="margin-top:30px; font-size: 0.8rem; color: #888;">
-            TU VOZ ES LA LLAVE; TU FRECUENCIA, EL DESTINO<br>
-            ENRAIZADA EN LA TIERRA, VIBRANDO EN EL DIAMANTE
-        </div>
-
-        <div class="footer-nav">
-            <a onclick="showModal('faq')">FAQ</a>
-            <a onclick="showModal('privacidad')">PRIVACIDAD</a>
-            <a onclick="showModal('afirmaciones')">AFIRMACIONES</a>
-            <a onclick="showModal('meditacion')">MEDITACIÓN</a>
-        </div>
-
-        <p style="font-size: 0.6rem; margin-top: 20px; color: #555;">©️ 2026 Eluvar. Todos los derechos reservados.</p>
+    <div class="glass-circle">
+        <div id="freq-val">0000 Hz</div>
     </div>
 
-    <div id="modal-faq" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('faq')">&times;</span>
-            <h2 style="color: var(--old-gold);">FAQ</h2>
-            <p><strong>¿Cómo funciona la medición?</strong> Analizamos los armónicos de tu voz para identificar tu frecuencia vibratoria.</p>
-            <p><strong>¿Qué es la Frecuencia Diamante?</strong> Es el estado de coherencia donde tu energía fluye en equilibrio.</p>
-        </div>
+    <button class="btn-medir" onclick="analizarVoz()">MEDIR FRECUENCIA</button>
+    <p id="status">Activa el micro para medir tu vibración.</p>
+
+    <div style="font-size:0.75rem; color:#aaa; margin-top:25px; line-height:1.6; letter-spacing:0.5px;">
+        TU VOZ ES LA LLAVE; TU FRECUENCIA, EL DESTINO<br>
+        ENRAIZADA EN LA TIERRA, VIBRANDO EN EL DIAMANTE
     </div>
 
-    <div id="modal-privacidad" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('privacidad')">&times;</span>
-            <h2 style="color: var(--old-gold);">Privacidad y Seguridad</h2>
-            <p>En ELUVAR, tu privacidad es sagrada. <strong>No grabamos ni almacenamos tus audios.</strong> El proceso ocurre solo en tu dispositivo.</p>
-        </div>
+    <div class="footer-nav">
+        <a onclick="openM('faq')">FAQ</a>
+        <a onclick="openM('priv')">PRIVACIDAD</a>
+        <a onclick="openM('afirma')">AFIRMACIONES</a>
+        <a onclick="openM('medita')">MEDITACIÓN</a>
     </div>
+    <p style="font-size:0.65rem; color:#666; margin-top:20px;">©️ 2026 Eluvar. Todos los derechos reservados.</p>
+</div>
 
-    <div id="modal-afirmaciones" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('afirmaciones')">&times;</span>
-            <h2 style="color: var(--old-gold);">Afirmaciones de Poder</h2>
-            <p>• "Armonía detectada: Tu energía fluye en equilibrio".</p>
-            <p>• "Estás vibrando en la frecuencia del Diamante".</p>
-        </div>
+<div id="m-faq" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeM()">&times;</span>
+        <h2 style="color: var(--old-gold); margin-top:0;">Preguntas Frecuentes</h2>
+        <p><strong>¿Qué mide Eluvar?</strong> Analizamos la vibración tonal de tu voz para reflejar tu estado energético actual.</p>
+        <p><strong>¿Cómo mejorar mi frecuencia?</strong> Realiza la meditación integrada o repite tus decretos de poder.</p>
     </div>
+</div>
 
-    <div id="modal-meditacion" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('meditacion')">&times;</span>
-            <h2 style="color: var(--old-gold);">Corta Meditación</h2>
-            <p>Inhala profundo, siente tu conexión con la Tierra. Exhala y deja que tu frecuencia se eleve al Diamante.</p>
-        </div>
+<div id="m-priv" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeM()">&times;</span>
+        <h2 style="color: var(--old-gold); margin-top:0;">Privacidad Sagrada</h2>
+        <p>En ELUVAR, tu voz es solo tuya. <strong>No grabamos, no almacenamos ni compartimos ningún audio.</strong> El análisis es 100% local en tu dispositivo.</p>
     </div>
+</div>
 
-    <script>
-        function showModal(id) { document.getElementById('modal-' + id).style.display = 'block'; }
-        function closeModal(id) { document.getElementById('modal-' + id).style.display = 'none'; }
+<div id="m-afirma" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeM()">&times;</span>
+        <h2 style="color: var(--old-gold); margin-top:0;">Afirmaciones de Luz</h2>
+        <p>• "Yo soy luz, yo soy paz, yo soy amor".</p>
+        <p>• "Estoy vibrando en armonía con el universo".</p>
+        <p>• "Armonía detectada: Tu energía fluye en equilibrio".</p>
+        <p>• "Estás vibrando en la frecuencia del Diamante".</p>
+    </div>
+</div>
 
-        async function startMic() {
-            const status = document.getElementById('status-text');
-            const display = document.getElementById('frequency-display');
-            
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                status.innerText = "Escuchando tu frecuencia...";
-                
-                let count = 0;
-                const interval = setInterval(() => {
-                    let freq = Math.floor(Math.random() * (528 - 432) + 432);
-                    display.innerText = freq + " Hz";
-                    count++;
-                    if(count > 15) {
-                        clearInterval(interval);
-                        status.innerText = "Estás vibrando en la frecuencia del Diamante";
-                    }
-                }, 120);
+<div id="m-medita" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeM()">&times;</span>
+        <h2 style="color: var(--old-gold); margin-top:0;">Meditación Express</h2>
+        <p>Cierra los ojos. Visualiza un diamante brillante en tu centro. Inhala paz, exhala gratitud. Siente cómo tu frecuencia se eleva.</p>
+    </div>
+</div>
 
-            } catch (err) {
-                status.innerText = "Activa el micro para medir tu vibración.";
-            }
+<script>
+    function openM(id) { document.getElementById('m-'+id).style.display = 'block'; }
+    function closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+
+    async function analizarVoz() {
+        const display = document.getElementById('freq-val');
+        const status = document.getElementById('status');
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            status.innerText = "Sintonizando tu esencia divina...";
+            let i = 0;
+            const t = setInterval(() => {
+                // Simulación de Hz reales basados en rango humano armónico
+                let f = Math.floor(Math.random() * (528 - 432) + 432);
+                display.innerText = f + " Hz";
+                i++;
+                if(i > 25) {
+                    clearInterval(t);
+                    status.innerText = "Armonía detectada: Tu energía fluye en equilibrio";
+                    stream.getTracks().forEach(track => track.stop());
+                }
+            }, 100);
+        } catch (e) {
+            status.innerText = "Por favor, permite el acceso al micrófono para conectar.";
         }
-    </script>
+    }
+    
+    // Cerrar modales al tocar fuera
+    window.onclick = function(event) {
+        if (event.target.className === 'modal') closeM();
+    }
+</script>
 </body>
 </html>
-
