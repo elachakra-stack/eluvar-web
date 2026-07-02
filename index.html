@@ -170,67 +170,63 @@
     function openM(id) { document.getElementById('m-'+id).style.display = 'block'; }
     function closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
-  async function analizarVoz() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioCtx.createMediaStreamSource(stream);
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        source.connect(analyser);
+ const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const source = audioCtx.createMediaStreamSource(stream);
+const analyser = audioCtx.createAnalyser();
+analyser.fftSize = 256;
+source.connect(analyser);
 
-        let i = 0;
-        status.innerText = "Conectando micrófono... 🎤";
+const bufferLength = analyser.frequencyBinCount;
+const dataArray = new Uint8Array(bufferLength);
 
-        // Usamos una variable para saber cuándo podemos empezar a medir de verdad
-        let microfonoListo = false;
+let i = 0;
+status.innerText = "Conectando micrófono... 🎤";
 
-        // Esperamos 1 segundo para que el micrófono se estabilice en silencio
-        setTimeout(() => {
-            microfonoListo = true;
-            status.innerText = "Escuchando... Esperando tu voz ✨";
-        }, 1000);
+// Usamos una variable para saber cuándo podemos empezar a medir de verdad
+let microfonoListo = false;
 
-        function detectarYMedir() {
-            analyser.getByteFrequencyData(dataArray);
-            
-            let volumen = 0;
-            for (let j = 0; j < bufferLength; j++) {
-                volumen += dataArray[j];
-            }
-            volumen = volumen / bufferLength;
+// Esperamos 1 segundo para que el micrófono se estabilice en silencio
+setTimeout(() => {
+    microfonoListo = true;
+    status.innerText = "Escuchando... Esperando tu voz ✨";
+}, 1000);
 
-            // SOLO mide si ya pasó el segundo de estabilización Y el volumen supera el umbral
-            if (microfonoListo && volumen > 5) {
-                let f = Math.floor(Math.random() * (528 - 432) + 432);
-                display.innerText = f + " Hz";
-                i++;
+function detectarYMedir() {
+    // 1. Volvemos a pedir el siguiente frame para que no se pare el bucle
+    requestAnimationFrame(detectarYMedir);
 
-                if (i > 25) {
-                    status.innerText = "Armonía detectada: Tu energía fluye en equilibrio"; // Frase protegida
-                    stream.getTracks().forEach(track => track.stop());
-                    audioCtx.close();
-                    return;
-                }
-            } else if (microfonoListo) {
-                if (i > 0 && i <= 25) {
-                    status.innerText = "No te detengas, sigue hablando... 🎤";
-                }
-            }
+    analyser.getByteFrequencyData(dataArray);
 
-            requestAnimationFrame(detectarYMedir);
+    let volumen = 0;
+    for (let j = 0; j < bufferLength; j++) {
+        volumen += dataArray[j];
+    }
+    volumen = volumen / bufferLength;
+
+    // SOLO mide si ya pasó el segundo de estabilización Y el volumen supera el umbral
+    // Volvemos a poner 15 que era tu número ideal original 😉
+    if (microfonoListo && volumen > 15) {
+        let f = Math.floor(Math.random() * (528 - 432) + 432);
+        display.innerText = f + " Hz";
+        i++;
+
+        if (i > 25) {
+            status.innerText = "Armonía detectada: Tu energía fluye en equilibrio"; 
+            stream.getTracks().forEach(track => track.stop());
+            audioCtx.close();
+            return;
         }
-
-        detectarYMedir();
-
-    } catch (e) {
-        status.innerText = "Por favor, permite el acceso al micrófono para conectar.";
+    } else if (microfonoListo) {
+        if (i > 0 && i <= 25) {
+            status.innerText = "No te detengas, sigue hablando... 🎤";
+        }
     }
 }
+
+// 2. ¡EL MOTOR! Arrancamos la escucha activa por primera vez
+detectarYMedir();
     
     // Cerrar modales al tocar fuera
     window.onclick = function(event) {
