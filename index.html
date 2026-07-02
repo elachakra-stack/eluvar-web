@@ -170,64 +170,63 @@
     function openM(id) { document.getElementById('m-'+id).style.display = 'block'; }
     function closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
- const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+async function analizarVoz() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
 
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const source = audioCtx.createMediaStreamSource(stream);
-const analyser = audioCtx.createAnalyser();
-analyser.fftSize = 256;
-source.connect(analyser);
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
 
-const bufferLength = analyser.frequencyBinCount;
-const dataArray = new Uint8Array(bufferLength);
+        let i = 0;
+        status.innerText = "Conectando micrófono... 🎤";
 
-let i = 0;
-status.innerText = "Conectando micrófono... 🎤";
+        let microfonoListo = false;
 
-// Usamos una variable para saber cuándo podemos empezar a medir de verdad
-let microfonoListo = false;
+        setTimeout(() => {
+            microfonoListo = true;
+            status.innerText = "Escuchando... Esperando tu voz ✨";
+        }, 1000);
 
-// Esperamos 1 segundo para que el micrófono se estabilice en silencio
-setTimeout(() => {
-    microfonoListo = true;
-    status.innerText = "Escuchando... Esperando tu voz ✨";
-}, 1000);
+        function detectarYMedir() {
+            requestAnimationFrame(detectarYMedir);
 
-function detectarYMedir() {
-    // 1. Volvemos a pedir el siguiente frame para que no se pare el bucle
-    requestAnimationFrame(detectarYMedir);
+            analyser.getByteFrequencyData(dataArray);
 
-    analyser.getByteFrequencyData(dataArray);
+            let volumen = 0;
+            for (let j = 0; j < bufferLength; j++) {
+                volumen += dataArray[j];
+            }
+            volumen = volumen / bufferLength;
 
-    let volumen = 0;
-    for (let j = 0; j < bufferLength; j++) {
-        volumen += dataArray[j];
-    }
-    volumen = volumen / bufferLength;
+            if (microfonoListo && volumen > 15) {
+                let f = Math.floor(Math.random() * (528 - 432) + 432);
+                display.innerText = f + " Hz";
+                i++;
 
-    // SOLO mide si ya pasó el segundo de estabilización Y el volumen supera el umbral
-    // Volvemos a poner 15 que era tu número ideal original 😉
-    if (microfonoListo && volumen > 15) {
-        let f = Math.floor(Math.random() * (528 - 432) + 432);
-        display.innerText = f + " Hz";
-        i++;
-
-        if (i > 25) {
-            status.innerText = "Armonía detectada: Tu energía fluye en equilibrio"; 
-            stream.getTracks().forEach(track => track.stop());
-            audioCtx.close();
-            return;
-        }
-  } else if (microfonoListo) {
-            if (i > 0 && i <= 25) {
-                status.innerText = "No te detengas, sigue hablando... 🎤";
+                if (i > 25) {
+                    status.innerText = "Armonía detectada: Tu energía fluye en equilibrio"; 
+                    stream.getTracks().forEach(track => track.stop());
+                    audioCtx.close();
+                    return;
+                }
+            } else if (microfonoListo) {
+                if (i > 0 && i <= 25) {
+                    status.innerText = "No te detengas, sigue hablando... 🎤";
+                }
             }
         }
+
+        detectarYMedir();
+
+    } catch (error) {
+        console.error("Error al acceder al micrófono:", error);
+        status.innerText = "Error: No se pudo conectar el micrófono ❌";
     }
-
-    // 2. ¡EL MOTOR! Arrancamos la escucha activa por primera vez
-    detectarYMedir();
-
 }
 
 // Cerrar modales al tocar fuera
