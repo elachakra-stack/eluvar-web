@@ -172,10 +172,8 @@
 
   async function analizarVoz() {
     try {
-        // 1. Pedimos acceso real al micrófono
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         
-        // 2. Creamos las herramientas para escuchar el volumen
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const source = audioCtx.createMediaStreamSource(stream);
         const analyser = audioCtx.createAnalyser();
@@ -186,52 +184,53 @@
         const dataArray = new Uint8Array(bufferLength);
 
         let i = 0;
-        status.innerText = "Escuchando... Esperando tu voz ✨";
+        status.innerText = "Conectando micrófono... 🎤";
 
-        // 3. Esta función se ejecuta en bucle para analizar el sonido continuamente
+        // Usamos una variable para saber cuándo podemos empezar a medir de verdad
+        let microfonoListo = false;
+
+        // Esperamos 1 segundo para que el micrófono se estabilice en silencio
+        setTimeout(() => {
+            microfonoListo = true;
+            status.innerText = "Escuchando... Esperando tu voz ✨";
+        }, 1000);
+
         function detectarYMedir() {
             analyser.getByteFrequencyData(dataArray);
             
-            // Calculamos el volumen promedio actual
             let volumen = 0;
             for (let j = 0; j < bufferLength; j++) {
                 volumen += dataArray[j];
             }
             volumen = volumen / bufferLength;
 
-            // UMBRAL DE SILENCIO: Si el volumen es mayor a 15, significa que estás hablando
-            if (volumen > 15) {
-                // Generamos los Hz armónicos en pantalla
+            // SOLO mide si ya pasó el segundo de estabilización Y el volumen supera el umbral
+            if (microfonoListo && volumen > 25) {
                 let f = Math.floor(Math.random() * (528 - 432) + 432);
                 display.innerText = f + " Hz";
                 i++;
 
-                // Cuando lleva 25 mediciones con voz, se detiene y muestra tu frase de poder
                 if (i > 25) {
                     status.innerText = "Armonía detectada: Tu energía fluye en equilibrio"; // Frase protegida
                     stream.getTracks().forEach(track => track.stop());
                     audioCtx.close();
-                    return; // Fin de la animación
+                    return;
                 }
-            } else {
-                // Si vuelve el silencio antes de terminar, podemos poner un aviso sutil
+            } else if (microfonoListo) {
                 if (i > 0 && i <= 25) {
                     status.innerText = "No te detengas, sigue hablando... 🎤";
                 }
             }
 
-            // Sigue ejecutando el análisis en el próximo fotograma
             requestAnimationFrame(detectarYMedir);
         }
 
-        // Arrancamos la escucha activa
         detectarYMedir();
 
     } catch (e) {
         status.innerText = "Por favor, permite el acceso al micrófono para conectar.";
     }
 }
-    }
     
     // Cerrar modales al tocar fuera
     window.onclick = function(event) {
