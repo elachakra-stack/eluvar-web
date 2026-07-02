@@ -218,20 +218,22 @@ function detectarYMedir() {
             audioCtx.close();
             return;
         }
-    } else if (microfonoListo) {
-        if (i > 0 && i <= 25) {
-            status.innerText = "No te detengas, sigue hablando... 🎤";
+  } else if (microfonoListo) {
+            if (i > 0 && i <= 25) {
+                status.innerText = "No te detengas, sigue hablando... 🎤";
+            }
         }
     }
+
+    // 2. ¡EL MOTOR! Arrancamos la escucha activa por primera vez
+    detectarYMedir();
+
 }
 
-// 2. ¡EL MOTOR! Arrancamos la escucha activa por primera vez
-detectarYMedir();
-    
-    // Cerrar modales al tocar fuera
-    window.onclick = function(event) {
-        if (event.target.className === 'modal') closeM();
-    }
+// Cerrar modales al tocar fuera
+window.onclick = function(event) {
+    if (event.target.className === 'modal') closeM();
+}
 </script>
 </body>
 </html>
