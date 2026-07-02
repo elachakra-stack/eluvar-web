@@ -205,7 +205,7 @@
             volumen = volumen / bufferLength;
 
             // SOLO mide si ya pasó el segundo de estabilización Y el volumen supera el umbral
-            if (microfonoListo && volumen > 15) {
+            if (microfonoListo && volumen > 10) {
                 let f = Math.floor(Math.random() * (528 - 432) + 432);
                 display.innerText = f + " Hz";
                 i++;
