@@ -181,7 +181,7 @@ async function analizarVoz() {
             let f = Math.floor(Math.random() * (528 - 432) + 432);
             if (display) display.innerText = f + " Hz";
             i++;
-            if(i > 25) {
+            if(i > 5) {
                 clearInterval(t);
                 status.innerText = "Armonía detectada: Tu energía fluye en equilibrio";
                 stream.getTracks().forEach(track => track.stop());
