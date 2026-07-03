@@ -171,62 +171,118 @@
     function closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
 async function analizarVoz() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioCtx.createMediaStreamSource(stream);
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        source.connect(analyser);
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
 
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaStreamSource(stream);
+    const analyser = audioCtx.createAnalyser();
 
-        let i = 0;
-        status.innerText = "Conectando micrófono... 🎤";
+    analyser.fftSize = 256;
+    bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+    source.connect(analyser);
 
-        let microfonoListo = false;
+    isMeasuring = true;
+    measuringTimer = setTimeout(stopMeasuring, 4000); 
 
-        setTimeout(() => {
-            microfonoListo = true;
-            status.innerText = "Escuchando... Esperando tu voz ✨";
-        }, 1000);
+    let i = 0;
+    status.innerText = "Conectando micrófono... 🎤";
 
-        function detectarYMedir() {
-            requestAnimationFrame(detectarYMedir);
+    let microfonoListo = false;
 
-            analyser.getByteFrequencyData(dataArray);
+    setTimeout(() => {
+      microfonoListo = true;
+      status.innerText = "Escuchando... Esperando tu voz ✨";
+    }, 1000);
 
-            let volumen = 0;
-            for (let j = 0; j < bufferLength; j++) {
-                volumen += dataArray[j];
-            }
-            volumen = volumen / bufferLength;
+  } catch (err) {
+    console.error("Error al acceder al micrófono:", err);
+    status.innerText = "Error: Permiso de micrófono denegado.";
+  }
+}
 
-            if (microfonoListo && volumen > 15) {
-                let f = Math.floor(Math.random() * (528 - 432) + 432);
-                display.innerText = f + " Hz";
-                i++;
+function detectarYMedir() {
+  if (!isMeasuring) return;
 
-                if (i > 25) {
-                    status.innerText = "Armonía detectada: Tu energía fluye en equilibrio"; 
-                    stream.getTracks().forEach(track => track.stop());
-                    audioCtx.close();
-                    return;
-                }
-            } else if (microfonoListo) {
-                if (i > 0 && i <= 25) {
-                    status.innerText = "No te detengas, sigue hablando... 🎤";
-                }
+  analyser.getByteFrequencyData(dataArray);
+
+  let sum = 0;
+  for (let i = 0; i < bufferLength; i++) {
+    sum += dataArray[i];
+  }
+  let currentAverage = sum / bufferLength;
+
+  if (microfonoListo && currentAverage > 10) { 
+    totalAverage += currentAverage;
+    countForAverage++;
+  }
+
+  requestAnimationFrame(detectarYMedir);
+}
+function detectarYMedir() {
+    // 1. Volvemos a pedir el siguiente frame para que no se pare el bucle
+    requestAnimationFrame(detectarYMedir);
+
+    analyser.getByteFrequencyData(dataArray);
+
+    let volumen = 0;
+    for (let j = 0; j < bufferLength; j++) {
+        volumen += dataArray[j];
+    }
+    volumen = volumen / bufferLength;
+
+    // SOLO mide si ya pasó el segundo de estabilización Y el volumen supera el umbral
+    // Volvemos a poner 15 que era tu número ideal original 😉
+    if (microfonoListo && volumen > 15) {
+        let f = Math.floor(Math.random() * (528 - 432) + 432);
+        display.innerText = f + " Hz";
+        i++;
+
+        if (i > 25) {
+            status.innerText = "Armonía detectada: Tu energía fluye en equilibrio"; 
+            stream.getTracks().forEach(track => track.stop());
+            audioCtx.close();
+            return;
+        }
+    } else if (microfonoListo) {
+        if (i > 0 && i <= 25) {
+            status.innerText = "No te detengas, sigue hablando... 🎤";
+        }
+    }
+}
+
+// 2. ¡EL MOTOR! Arrancamos la escucha activa por primera vez
+detectarYMedir();
+[0:57, 3/7/2026] Ela: } else if (microfonoListo) {
+        if (i > 0 && i <= 25) {
+            status.innerText = "No te detengas, sigue hablando... 🎤";
+        }
+    }
+} // <- Esta es la llave que cierra detectarYMedir (debe quedarse ahí)
+
+// // 2. ¡EL MOTOR! Arrancamos la escucha activa por primera vez
+detectarYMedir();
+
+} // <- ¡AQUÍ ES DONDE TIENE QUE ESTAR LA LLAVE AMARILLA! (Cierra analizarVoz)
+
+// Cerrar modales al tocar fuera
+window.onclick = function(event) {
+[1:02, 3/7/2026] Ela: } else if (microfonoListo) {
+            if (i > 0 && i <= 25) {
+                status.innerText = "No te detengas, sigue hablando... 🎤";
             }
         }
-
-        detectarYMedir();
-
-    } catch (error) {
-        console.error("Error al acceder al micrófono:", error);
-        status.innerText = "Error: No se pudo conectar el micrófono ❌";
     }
+
+    // 2. ¡EL MOTOR! Arrancamos la escucha activa por primera vez
+    detectarYMedir();
+
+}
+
+// Cerrar modales al tocar fuera
+window.onclick = function(event) {
+    if (event.target.className === 'modal') closeM();
 }
 
 // Cerrar modales al tocar fuera
