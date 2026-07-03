@@ -170,125 +170,134 @@
     function openM(id) { document.getElementById('m-'+id).style.display = 'block'; }
     function closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
-async function analizarVoz() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+<script>
+        let audioCtx;
+        let analyser;
+        let stream;
+        let dataArray;
+        let bufferLength;
+        let isMeasuring = false;
+        let totalAverage = 0;
+        let countForAverage = 0;
+        let microfonoListo = false;
+        let animationFrameId;
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioCtx.createMediaStreamSource(stream);
-    const analyser = audioCtx.createAnalyser();
+        const status = document.getElementById("status");
+        const btnMeasure = document.getElementById("btnMeasure");
+        const resultCard = document.getElementById("resultCard");
+        const phraseResult = document.getElementById("phraseResult");
+        const canvas = document.getElementById("visualizer");
+        const canvasCtx = canvas.getContext("2d");
 
-    analyser.fftSize = 256;
-    bufferLength = analyser.frequencyBinCount;
-    dataArray = new Uint8Array(bufferLength);
-    source.connect(analyser);
+        const frasesDePoder = [
+            "Armonía detectada: Tu energía fluye en equilibrio",
+            "Estás vibrando en la frecuencia del Diamante",
+            "Se detectó conexión con energía terrestre",
+            "Frecuencia de sanación detectada en tu voz"
+        ];
 
-    isMeasuring = true;
-    measuringTimer = setTimeout(stopMeasuring, 4000); 
-
-    let i = 0;
-    status.innerText = "Conectando micrófono... 🎤";
-
-    let microfonoListo = false;
-
-    setTimeout(() => {
-      microfonoListo = true;
-      status.innerText = "Escuchando... Esperando tu voz ✨";
-    }, 1000);
-
-  } catch (err) {
-    console.error("Error al acceder al micrófono:", err);
-    status.innerText = "Error: Permiso de micrófono denegado.";
-  }
-}
-
-function detectarYMedir() {
-  if (!isMeasuring) return;
-
-  analyser.getByteFrequencyData(dataArray);
-
-  let sum = 0;
-  for (let i = 0; i < bufferLength; i++) {
-    sum += dataArray[i];
-  }
-  let currentAverage = sum / bufferLength;
-
-  if (microfonoListo && currentAverage > 10) { 
-    totalAverage += currentAverage;
-    countForAverage++;
-  }
-
-  requestAnimationFrame(detectarYMedir);
-}
-function detectarYMedir() {
-    // 1. Volvemos a pedir el siguiente frame para que no se pare el bucle
-    requestAnimationFrame(detectarYMedir);
-
-    analyser.getByteFrequencyData(dataArray);
-
-    let volumen = 0;
-    for (let j = 0; j < bufferLength; j++) {
-        volumen += dataArray[j];
-    }
-    volumen = volumen / bufferLength;
-
-    // SOLO mide si ya pasó el segundo de estabilización Y el volumen supera el umbral
-    // Volvemos a poner 15 que era tu número ideal original 😉
-    if (microfonoListo && volumen > 15) {
-        let f = Math.floor(Math.random() * (528 - 432) + 432);
-        display.innerText = f + " Hz";
-        i++;
-
-        if (i > 25) {
-            status.innerText = "Armonía detectada: Tu energía fluye en equilibrio"; 
-            stream.getTracks().forEach(track => track.stop());
-            audioCtx.close();
-            return;
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
         }
-    } else if (microfonoListo) {
-        if (i > 0 && i <= 25) {
-            status.innerText = "No te detengas, sigue hablando... 🎤";
-        }
-    }
-}
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
 
-// 2. ¡EL MOTOR! Arrancamos la escucha activa por primera vez
-detectarYMedir();
-[0:57, 3/7/2026] Ela: } else if (microfonoListo) {
-        if (i > 0 && i <= 25) {
-            status.innerText = "No te detengas, sigue hablando... 🎤";
-        }
-    }
-} // <- Esta es la llave que cierra detectarYMedir (debe quedarse ahí)
+        async function analizarVoz() {
+            if (isMeasuring) return;
+            
+            isMeasuring = true;
+            microfonoListo = false;
+            totalAverage = 0;
+            countForAverage = 0;
+            resultCard.style.display = "none";
+            btnMeasure.disabled = true;
+            status.innerText = "Conectando micrófono... 🎙️";
 
-// // 2. ¡EL MOTOR! Arrancamos la escucha activa por primera vez
-detectarYMedir();
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioCtx.createMediaStreamSource(stream);
+                analyser = audioCtx.createAnalyser();
 
-} // <- ¡AQUÍ ES DONDE TIENE QUE ESTAR LA LLAVE AMARILLA! (Cierra analizarVoz)
+                analyser.fftSize = 256;
+                bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                source.connect(analyser);
 
-// Cerrar modales al tocar fuera
-window.onclick = function(event) {
-[1:02, 3/7/2026] Ela: } else if (microfonoListo) {
-            if (i > 0 && i <= 25) {
-                status.innerText = "No te detengas, sigue hablando... 🎤";
+                setTimeout(() => {
+                    microfonoListo = true;
+                    status.innerText = "Escuchando... Esperando tu voz ✨";
+                }, 1000);
+
+                setTimeout(stopMeasuring, 5000);
+                detectarYMedir();
+
+            } catch (err) {
+                console.error(err);
+                status.innerText = "Error: Permiso de micrófono denegado.";
+                isMeasuring = false;
+                btnMeasure.disabled = false;
             }
         }
-    }
 
-    // 2. ¡EL MOTOR! Arrancamos la escucha activa por primera vez
-    detectarYMedir();
+        function detectarYMedir() {
+            if (!isMeasuring) return;
 
-}
+            animationFrameId = requestAnimationFrame(detectarYMedir);
+            analyser.getByteFrequencyData(dataArray);
 
-// Cerrar modales al tocar fuera
-window.onclick = function(event) {
-    if (event.target.className === 'modal') closeM();
-}
+            canvasCtx.fillStyle = 'rgba(10, 25, 47, 0.3)';
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-// Cerrar modales al tocar fuera
-window.onclick = function(event) {
-    if (event.target.className === 'modal') closeM();
-}
+            const barWidth = (canvas.width / bufferLength) * 2.5;
+            let barHeight;
+            let x = 0;
+
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                barHeight = dataArray[i];
+                
+                const r = 212 + (barHeight/255) * 43;
+                const g = 175 + (barHeight/255) * 56;
+                const b = 55 + (barHeight/255) * 200;
+                
+                canvasCtx.fillStyle = rgba(${r}, ${g}, ${b}, 0.8);
+                canvasCtx.fillRect(x, canvas.height - barHeight/2, barWidth, barHeight/2);
+                x += barWidth + 1;
+
+                sum += barHeight;
+            }
+
+            let currentAverage = sum / bufferLength;
+
+            if (microfonoListo && currentAverage > 10) {
+                totalAverage += currentAverage;
+                countForAverage++;
+                status.innerText = "Analizando tu vibración... ⚡";
+            }
+        }
+
+        function stopMeasuring() {
+            isMeasuring = false;
+            cancelAnimationFrame(animationFrameId);
+            btnMeasure.disabled = false;
+            status.innerText = "Análisis completo.";
+
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            if (audioCtx) {
+                audioCtx.close();
+            }
+
+            canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const randomIndex = Math.floor(Math.random() * frasesDePoder.length);
+            phraseResult.innerText = frasesDePoder[randomIndex];
+            resultCard.style.display = "block";
+        }
+    
 </script>
 </body>
 </html>
