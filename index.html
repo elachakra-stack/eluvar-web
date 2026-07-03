@@ -170,16 +170,53 @@
     function openM(id) { document.getElementById('m-'+id).style.display = 'block'; }
     function closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
-async function analizarVoz() {
+</script>
+
+<script>
+    let audioCtx;
+    let analyser;
+    let stream;
+    let dataArray;
+    let bufferLength;
+    let isMeasuring = false;
+    let totalAverage = 0;
+    let countForAverage = 0;
+    let microfonoListo = false;
+    let animationFrameId;
+
+    const status = document.getElementById("status");
+    const btnMeasure = document.getElementById("btnMeasure");
+    const resultCard = document.getElementById("resultCard");
+    const phraseResult = document.getElementById("phraseResult");
+    const canvas = document.getElementById("visualizer");
+    const canvasCtx = canvas.getContext("2d");
+
+    const frasesDePoder = [
+        "Armonía detectada: Tu energía fluye en equilibrio",
+        "Estás vibrando en la frecuencia del Diamante",
+        "Se detectó conexión con energía terrestre",
+        "Frecuencia de sanación detectada en tu voz"
+    ];
+
+    function resizeCanvas() {
+        if (canvas && canvas.parentElement) {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    async function analizarVoz() {
         if (isMeasuring) return;
         
         isMeasuring = true;
         microfonoListo = false;
         totalAverage = 0;
         countForAverage = 0;
-        resultCard.style.display = "none";
-        btnMeasure.disabled = true;
-        status.innerText = "Conectando micrófono... 🎙️";
+        if (resultCard) resultCard.style.display = "none";
+        if (btnMeasure) btnMeasure.disabled = true;
+        if (status) status.innerText = "Conectando micrófono... 🎙️";
 
         try {
             stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
@@ -194,7 +231,7 @@ async function analizarVoz() {
 
             setTimeout(() => {
                 microfonoListo = true;
-                status.innerText = "Escuchando... Esperando tu voz ✨";
+                if (status) status.innerText = "Escuchando... Esperando tu voz ✨";
             }, 1000);
 
             setTimeout(stopMeasuring, 5000);
@@ -202,9 +239,9 @@ async function analizarVoz() {
 
         } catch (err) {
             console.error(err);
-            status.innerText = "Error: Permiso de micrófono denegado.";
+            if (status) status.innerText = "Error: Permiso de micrófono denegado.";
             isMeasuring = false;
-            btnMeasure.disabled = false;
+            if (btnMeasure) btnMeasure.disabled = false;
         }
     }
 
@@ -214,25 +251,24 @@ async function analizarVoz() {
         animationFrameId = requestAnimationFrame(detectarYMedir);
         analyser.getByteFrequencyData(dataArray);
 
-        canvasCtx.fillStyle = 'rgba(10, 25, 47, 0.3)';
-        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+        if (canvasCtx) {
+            canvasCtx.fillStyle = 'rgba(10, 25, 47, 0.3)';
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-        const barWidth = (canvas.width / bufferLength) * 2.5;
-        let barHeight;
-        let x = 0;
+            const barWidth = (canvas.width / bufferLength) * 2.5;
+            let barHeight;
+            let x = 0;
+            let sum = 0;
 
-        let sum = 0;
-        for (let i = 0; i < bufferLength; i++) {
-            barHeight = dataArray[i];
-            
-            const r = 212 + (barHeight/255) * 43;
-            const g = 175 + (barHeight/255) * 56;
-            const b = 55 + (barHeight/255) * 200;
-            
-            canvasCtx.fillStyle = rgba(${r}, ${g}, ${b}, 0.8);
-            canvasCtx.fillRect(x, canvas.height - barHeight/2, barWidth, barHeight/2);
-            x += barWidth + 1;
-
+            for (let i = 0; i < bufferLength; i++) {
+                barHeight = dataArray[i];
+                const r = 212 + (barHeight/255) * 43;
+                const g = 175 + (barHeight/255) * 56;
+                const b = 55 + (barHeight/255) * 200;
+                
+                canvasCtx.fillStyle = rgba(${r}, ${g}, ${b}, 0.8);
+                canvasCtx.fillRect(x, canvas.height - barHeight/2, barWidth, barHeight/2);
+                x += barWidth + 1;
                 sum += barHeight;
             }
 
@@ -241,29 +277,30 @@ async function analizarVoz() {
             if (microfonoListo && currentAverage > 10) {
                 totalAverage += currentAverage;
                 countForAverage++;
-                status.innerText = "Analizando tu vibración... ⚡";
+                if (status) status.innerText = "Analizando tu vibración... ⚡";
             }
         }
+    }
 
-        function stopMeasuring() {
-            isMeasuring = false;
-            cancelAnimationFrame(animationFrameId);
-            btnMeasure.disabled = false;
-            status.innerText = "Análisis completo.";
+    function stopMeasuring() {
+        isMeasuring = false;
+        cancelAnimationFrame(animationFrameId);
+        if (btnMeasure) btnMeasure.disabled = false;
+        if (status) status.innerText = "Análisis completo.";
 
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-            if (audioCtx) {
-                audioCtx.close();
-            }
-
-            canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-
-            const randomIndex = Math.floor(Math.random() * frasesDePoder.length);
-            phraseResult.innerText = frasesDePoder[randomIndex];
-            resultCard.style.display = "block";
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
         }
-    </script>
+        if (audioCtx) {
+            audioCtx.close();
+        }
+
+        if (canvasCtx) canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const randomIndex = Math.floor(Math.random() * frasesDePoder.length);
+        if (phraseResult) phraseResult.innerText = frasesDePoder[randomIndex];
+        if (resultCard) resultCard.style.display = "block";
+    }
+</script>
 </body>
 </html>
