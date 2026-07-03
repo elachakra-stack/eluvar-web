@@ -170,101 +170,68 @@
     function openM(id) { document.getElementById('m-'+id).style.display = 'block'; }
     function closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
+async function analizarVoz() {
+        if (isMeasuring) return;
+        
+        isMeasuring = true;
+        microfonoListo = false;
+        totalAverage = 0;
+        countForAverage = 0;
+        resultCard.style.display = "none";
+        btnMeasure.disabled = true;
+        status.innerText = "Conectando micrófono... 🎙️";
 
-        let audioCtx;
-        let analyser;
-        let stream;
-        let dataArray;
-        let bufferLength;
-        let isMeasuring = false;
-        let totalAverage = 0;
-        let countForAverage = 0;
-        let microfonoListo = false;
-        let animationFrameId;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioCtx.createMediaStreamSource(stream);
+            analyser = audioCtx.createAnalyser();
 
-        const status = document.getElementById("status");
-        const btnMeasure = document.getElementById("btnMeasure");
-        const resultCard = document.getElementById("resultCard");
-        const phraseResult = document.getElementById("phraseResult");
-        const canvas = document.getElementById("visualizer");
-        const canvasCtx = canvas.getContext("2d");
+            analyser.fftSize = 256;
+            bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+            source.connect(analyser);
 
-        const frasesDePoder = [
-            "Armonía detectada: Tu energía fluye en equilibrio",
-            "Estás vibrando en la frecuencia del Diamante",
-            "Se detectó conexión con energía terrestre",
-            "Frecuencia de sanación detectada en tu voz"
-        ];
+            setTimeout(() => {
+                microfonoListo = true;
+                status.innerText = "Escuchando... Esperando tu voz ✨";
+            }, 1000);
 
-        function resizeCanvas() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
+            setTimeout(stopMeasuring, 5000);
+            detectarYMedir();
+
+        } catch (err) {
+            console.error(err);
+            status.innerText = "Error: Permiso de micrófono denegado.";
+            isMeasuring = false;
+            btnMeasure.disabled = false;
         }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+    }
 
-        async function analizarVoz() {
-            if (isMeasuring) return;
+    function detectarYMedir() {
+        if (!isMeasuring) return;
+
+        animationFrameId = requestAnimationFrame(detectarYMedir);
+        analyser.getByteFrequencyData(dataArray);
+
+        canvasCtx.fillStyle = 'rgba(10, 25, 47, 0.3)';
+        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const barWidth = (canvas.width / bufferLength) * 2.5;
+        let barHeight;
+        let x = 0;
+
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+            barHeight = dataArray[i];
             
-            isMeasuring = true;
-            microfonoListo = false;
-            totalAverage = 0;
-            countForAverage = 0;
-            resultCard.style.display = "none";
-            btnMeasure.disabled = true;
-            status.innerText = "Conectando micrófono... 🎙️";
-
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const source = audioCtx.createMediaStreamSource(stream);
-                analyser = audioCtx.createAnalyser();
-
-                analyser.fftSize = 256;
-                bufferLength = analyser.frequencyBinCount;
-                dataArray = new Uint8Array(bufferLength);
-                source.connect(analyser);
-
-                setTimeout(() => {
-            microfonoListo = true;
-            status.innerText = "Escuchando... Esperando tu voz ✨";
-        }, 1000);
-
-        setTimeout(stopMeasuring, 4000);
-        detectarYMedir();
-
-            } catch (err) {
-                console.error(err);
-                status.innerText = "Error: Permiso de micrófono denegado.";
-                isMeasuring = false;
-                btnMeasure.disabled = false;
-            }
-        }
-
-        function detectarYMedir() {
-            if (!isMeasuring) return;
-
-            animationFrameId = requestAnimationFrame(detectarYMedir);
-            analyser.getByteFrequencyData(dataArray);
-
-            canvasCtx.fillStyle = 'rgba(10, 25, 47, 0.3)';
-            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const barWidth = (canvas.width / bufferLength) * 2.5;
-            let barHeight;
-            let x = 0;
-
-            let sum = 0;
-            for (let i = 0; i < bufferLength; i++) {
-                barHeight = dataArray[i];
-                
-                const r = 212 + (barHeight/255) * 43;
-                const g = 175 + (barHeight/255) * 56;
-                const b = 55 + (barHeight/255) * 200;
-                
-                canvasCtx.fillStyle = rgba(${r}, ${g}, ${b}, 0.8);
-                canvasCtx.fillRect(x, canvas.height - barHeight/2, barWidth, barHeight/2);
-                x += barWidth + 1;
+            const r = 212 + (barHeight/255) * 43;
+            const g = 175 + (barHeight/255) * 56;
+            const b = 55 + (barHeight/255) * 200;
+            
+            canvasCtx.fillStyle = rgba(${r}, ${g}, ${b}, 0.8);
+            canvasCtx.fillRect(x, canvas.height - barHeight/2, barWidth, barHeight/2);
+            x += barWidth + 1;
 
                 sum += barHeight;
             }
