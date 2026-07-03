@@ -226,12 +226,12 @@
                 source.connect(analyser);
 
                 setTimeout(() => {
-                    microfonoListo = true;
-                    status.innerText = "Escuchando... Esperando tu voz ✨";
-                }, 1000);
+            microfonoListo = true;
+            status.innerText = "Escuchando... Esperando tu voz ✨";
+        }, 1000);
 
-                setTimeout(stopMeasuring, 5000);
-                detectarYMedir();
+        setTimeout(stopMeasuring, 4000);
+        detectarYMedir();
 
             } catch (err) {
                 console.error(err);
